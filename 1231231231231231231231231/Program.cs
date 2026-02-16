@@ -78,6 +78,11 @@ class Program
 {
     static void Main()
     {
+        string logPath = "trace.log";
+        Trace.Listeners.Add(new TextWriterTraceListener(logPath));
+        Trace.AutoFlush = true;
+
+
         Console.WriteLine("[INFO] Приложение запущено");
         Trace.WriteLine($"[{DateTime.Now:HH:mm}] [TRACE] Приложение запущено");
 
