@@ -1,5 +1,8 @@
-﻿using Serilog;
+using Serilog;
+using Serilog.Events;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 public class TaskItem
 {
@@ -77,37 +80,43 @@ public static class TaskManager
 
 class Program
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     static void Main()
     {
-        File.Delete("trace.log");
+        //File.Delete("log/debug.log");
+        //File.Delete("log/error.log");
+        //File.Delete("log/info.log");
+        //File.Delete("log/warn.log");
+        var date1 = DateTime.Now;
+        string date = date1.ToString().Replace(':', '.');
+
+        Directory.CreateDirectory($"{date}");
+
         Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console()
-                
-                .WriteTo.File("trace.log",
-                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .CreateLogger();
-        
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Debug)
+                .WriteTo.File($"{date}/ debug.log",
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Information)
+                .WriteTo.File($"{date}/info.log",
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Warning)
+                .WriteTo.File($"{date}/warn.log",
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Error)
+                .WriteTo.File($"{date}/error.log",
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            .CreateLogger();
 
-
-        Log.Information("Приложение запущено");
-        Log.Debug("Приложение запущено");
+        var time = DateTime.Now;
+        Log.Information($"{time}: Запуск");
+        Log.Warning($"{time}: Запуск");
+        Log.Debug($"{time}: Запуск");
+        Log.Error($"{time}: Запуск");
 
         bool work = true;
         while (work)
@@ -131,22 +140,20 @@ class Program
                     break;
 
                 case "exit":
-                    
-                    Log.Information("закрытие программы");
-                    Log.Debug("Pользователь закрыл программу");
-                    // 3. Завершаем работу логера
+
+                    Log.Information("Закрытие программы");
+                    Log.Debug("Пользователь закрыл программу");
+
                     Log.CloseAndFlush();
+
                     Console.WriteLine("Нажмите любую клавишу для выхода...");
                     Console.ReadKey();
                     work = false;
-                    string logPath = "trace.log";
-                    Trace.Listeners.Add(new TextWriterTraceListener(logPath));
-                    Trace.AutoFlush = true;
                     break;
 
 
                 default:
-                    Log.Information("Неизвестная команда");
+                    Log.Error("Неизвестная команда");
                     break;
 
 
@@ -191,22 +198,3 @@ class Program
         TaskManager.RemoveTask(title);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
